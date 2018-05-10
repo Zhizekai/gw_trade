@@ -6,7 +6,7 @@ import http.cookiejar
 import os,time,string
 import sys
 import logging
-
+from stock_util import *
 class trade_url:
     def __init__(self):
         self.my_cookie = ""
@@ -30,6 +30,7 @@ class trade_url:
 
         for item in tmp_cookie:
             self.my_cookie+=item.name + "=" +item.value + ";"
+            #print("prepare cookie name:%s, value:%s" % (item.name, item.value))
         #htm = response.read()
         return 0, None
 
@@ -44,8 +45,12 @@ class trade_url:
         req.add_header('Cookie', self.my_cookie)
         #print req.headers
         #print req.data
+        tmp_cookie = http.cookiejar.CookieJar()
+        opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(tmp_cookie))
+
         try:
-            resp = urllib.request.urlopen(req, timeout=3)
+            #resp = urllib.request.urlopen(req, timeout=3)
+            resp = opener.open(req, timeout=3)
         except urllib.error.HTTPError as e:
             logging.warn("server process request error: err_code=%s", e.code)
             return -5, None
@@ -55,6 +60,12 @@ class trade_url:
         except Exception as e:
             logging.warn("other exception: msg=%s", e.__str__())
             return -100, None
+
+        #reset cookie
+        self.my_cookie = ""
+        for item in tmp_cookie:
+            self.my_cookie+=item.name + "=" +item.value + ";"
+            #print("post_url cookie name:%s, value:%s" % (item.name, item.value))
 
         htm = resp.read()
         return 0, htm
@@ -71,8 +82,8 @@ class trade_url:
             url=request_url,
             )
         req.add_header('Cookie', self.my_cookie)
-        #print req.headers
-        #print req.data
+        #print(req.headers)
+        #print(req.data)
         try:
             resp = urllib.request.urlopen(req, timeout=3)
         except urllib.HTTPError as e:

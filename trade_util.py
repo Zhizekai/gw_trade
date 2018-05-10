@@ -15,6 +15,9 @@ from html_parser import *
 from crack_bmp import *
 import logging
 
+import futuquant as ft
+from futuquant.open_context import *
+
 class gw_ret_code:
     # 150906130资金不足
     # 150906135股数不够
@@ -103,6 +106,7 @@ class auto_trade:
             return -15
 
         # 判断是否出错
+        #print(result.decode("gbk", "ignore"))
         reg = re.compile('.*PublicKey.*')
         match = reg.search(result.decode("gbk", "ignore"))
         if match:
@@ -115,6 +119,7 @@ class auto_trade:
                 print("login error: msg=%s" % (match.group(1)))
                 return gw_ret_code.OTHER_ERROR
         '''
+        #保存cookie
 
         return 0
         ############ get main page cookie ##############
@@ -220,6 +225,7 @@ class auto_trade:
         ret = self.prepare()
         if ret != 0:
             return  gw_ret_code.LOGIN_FAIL, "登录失败"
+
         (ret, result) = self.gw_trade.get_to_url("https://trade.cgws.com/cgi-bin/stock/EntrustQuery?function=MyAccount", "")
         if ret != 0:
             logging.warn("get to url fail: ret=%d" % ret)
@@ -227,17 +233,59 @@ class auto_trade:
         html_parse_inst = html_parser(result)
         return 0, html_parse_inst.get_account()
 
-    def query_order(self):
+    def query_holdings(self):
         ret = self.prepare()
         if ret != 0:
             print("login fail: ret=%d" % ret)
             return  gw_ret_code.LOGIN_FAIL, "登录失败"
+
         (ret, result) = self.gw_trade.get_to_url("https://trade.cgws.com/cgi-bin/stock/EntrustQuery?function=MyStock&stktype=0", "")
+        #print(result.decode("gbk", "ignore"))
         if ret != 0:
             logging.warn("get to url fail: ret=%d" % ret)
             return -5, None
         html_parse_inst = html_parser(result)
         return 0, html_parse_inst.get_holdings()
+
+    def sell_all_at_market_price(self):
+        (ret, result) = self.query_holdings()
+        if ret == 0:
+            logging.info("Query holdings OK: result=%s" % result)
+        else:
+            logging.warn("query holdings fail: ret=%d, result=%s" % (ret, result))
+            return -5, None
+
+        #sell all holdings at market prices
+        quote_context = ft.OpenQuoteContext(host='127.0.0.1', port=11111)
+        for one_holding in result:
+            if int(one_holding["amount"]) == 0:
+                continue
+            #subscript
+            stock_code_w_prifix = stock_util.add_prifix(one_holding["stock_code"])
+            ret_status, ret_data = quote_context.subscribe(stock_code_w_prifix, "QUOTE")
+            if ret_status != RET_OK:
+                print("%s %s: %s" % (stock_code_w_prifix, "QUOTE", ret_data))
+                continue
+
+            #query quote
+            code_list = []
+            code_list.append(stock_code_w_prifix)
+            ret_status, ret_data = quote_context.get_stock_quote(code_list)
+            if ret_status == RET_ERROR:
+                logging.info("get_stock_quote:stock_code=%s, msg=%s" % (code_list, ret_data))
+                continue
+
+            now_price = ret_data["last_price"][0]
+            sell_price = round(now_price*0.99, 2)
+
+            (ret, result) = self.buy_sell("S", one_holding["stock_code"], sell_price, one_holding["amount"])
+            if ret == 0:
+                logging.info("Deal OK: order_id=%s" % result)
+            else:
+                logging.warn("Buy Or Sell Fail: ret=%d, ret_msg=%s" % (ret, result))
+                continue
+
+        return 0, None
 
     ################# query ongoing order ####################
     def query_ongoing_order(self):

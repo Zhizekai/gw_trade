@@ -25,14 +25,15 @@ logging.getLogger('').addHandler(console)
 
 ######## init parse #############
 parser = argparse.ArgumentParser()
-parser.add_argument("-t", "--action_type", choices=['B', 'S', 'Q', 'A', 'G', 'C', 'N'], help="B: Buy; S: Sell; Q: Query Holdings; A: Query Account Info; G: Query Ongoings; C: Cancel Order; N: Buy New Stock")
+parser.add_argument("-t", "--action_type", choices=['B', 'S', 'Q', 'A', 'G', 'C', 'N', 'P'], help="B: Buy; S: Sell; Q: Query Holdings; A: Query Account Info; G: Query Ongoings; C: Cancel Order; N: Buy New Stock; P: Sell All at MP")
 parser.add_argument("cmd_args", nargs='*', help="[Buy Stock. Usage: -B stock_code price amount. e.g. -tB 159915  2 100]" \
                                                 "  [Sell Stock. Usage: -S  stock_code price amount. e.g. -tS 159915 2 100]" \
                                                 "  [Query Account Info. Usage: -tA]" \
                                                 "  [Query Holding Stock. Usage: -tQ]" \
                                                 "  [Query OnGoing Order. Usage: -tG]" \
                                                 "  [Cancel OnGoing Order. Usage: -tC order_id. order_id can be acquired from the result of -tG cmd]" \
-                                                "  [Buy New Stock. Usage: -tN]")
+                                                "  [Buy New Stock. Usage: -tN]" \
+                                                "  [Sell ALL Stock At Market Price. Usage: -tP")
 args = parser.parse_args()
 #print(args.action_type, args.cmd_args)
 
@@ -48,6 +49,13 @@ if (args.action_type == "B" or args.action_type == "S"):
     #time.sleep(10)
     #for  record in ongoing_list:
     #    auto_trade.cancel_order(record["order_id"])
+
+elif (args.action_type == "P"):
+    (ret, result) = auto_trade.sell_all_at_market_price()
+    if ret == 0:
+        logging.info("Clear all postion OK: result=%s" % result)
+    else:
+        logging.warn("Clear all postion fail: ret=%d, result=%s" % (ret, result))
 
 elif (args.action_type == "N"):
     cn_spider = CnIpoSpider()
@@ -74,7 +82,7 @@ elif (args.action_type == "N"):
             logging.warn("Buy Or Sell Fail: ret=%d, ret_msg=%s" % (ret, result))
 
 elif (args.action_type == "Q"):
-    (ret, result) = auto_trade.query_order()
+    (ret, result) = auto_trade.query_holdings()
     if ret == 0:
         logging.info("Query holdings OK: result=%s" % result)
     else:

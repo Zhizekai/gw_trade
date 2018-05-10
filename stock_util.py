@@ -39,6 +39,15 @@ class stock_util:
         else:
             return "none"
 
+    @classmethod
+    def add_prifix(self, stock_code):
+        if self.get_market_name(self, stock_code) == "sh":
+            return "SH."+stock_code
+        else:
+            return "SZ."+stock_code
+
+
+
     def get_up_limit(self, price):
         return 0
 

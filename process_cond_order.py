@@ -33,7 +33,7 @@ class process_cond_order():
         self.quote_context = ft.OpenQuoteContext(host='127.0.0.1', port=11111)
 
 
-    #检查是否是可以出发的时间
+    #检查是否是可以触发的时间
     def check_fire_time(self, begin_in_day, end_in_day):
         localtime = time.localtime(time.time())
         now_hour = localtime.tm_hour
@@ -52,7 +52,7 @@ class process_cond_order():
             code_list.append(row.stock_code)
             ret_status, ret_data = self.quote_context.get_stock_quote(code_list)
             if ret_status == RET_ERROR:
-                logging.info("get ticker error:stock_code=%s, msg=%s" % (code_list, ret_data))
+                logging.info("get_stock_quote error:stock_code=%s, msg=%s" % (code_list, ret_data))
                 return
 
             now_price = ret_data["last_price"][0]

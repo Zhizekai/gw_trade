@@ -2,6 +2,7 @@ import os,time,string
 import sys
 from pyquery import PyQuery as pq
 import re
+
 class html_parser:
     def __init__(self, html_text):
         self.html_text = html_text

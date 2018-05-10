@@ -6,8 +6,10 @@ import re
 import pandas as pd
 import numpy as np
 from datetime import *
-print range(5)
 
+for i in range(5):
+    print("i=", i)
+exit()
 
 def get_last_month(month_day):
     s1 = "20" + month_day
@@ -17,22 +19,20 @@ def get_last_month(month_day):
 d2 = get_last_month("1609")
 
 
-print d2
-
 exit()
 
 a = np.array([-1,  -1 ,  -1,  -1,  -1])
-print a/2
-print abs(a).mean()
+print(a/2)
+print(abs(a).mean())
 
 
 t1 = date(2016, 8, 3)
 t2 = datetime(2016, 8, 3)
 
 if t1 == t2:
-    print "time equal"
+    print("time equal")
 
-print t2-t1
+print(t2-t1)
 
 data = {
       'closePrice': np.array([ 16.93,  16.3 ,  16.56,  16.95,  16.66]),
@@ -44,7 +44,7 @@ data = {
   }
 
 a = [1 if data['closePrice'][i] - data['openPrice'][i] >= 0 else 0 for i in range(5)]
-print sum(a)
+print(sum(a))
 
 
 
@@ -52,15 +52,15 @@ exit()
 
 
 a=(1, 2, 3)
-print a
+print(a)
 b=['黑莓手机一代','黑莓手机二代']
 mob = ['魅族手机', b,'锤子手机']
-print mob
+print(mob)
 
 exit()
 def get_vcode(vcode_file, decode_file):
     cmd = r'"D:\Program Files\Tesseract-OCR\tesseract.exe "' + " " +  vcode_file + " " + decode_file
-    print cmd
+    print(cmd)
     os.system(cmd)
     f = open(decode_file+".txt", 'r')
     tmp_line = f.readline().strip()
@@ -73,7 +73,7 @@ file_name=sys.argv[1]
 print get_vcode(r"d:\1.jpg", r"d:\vcode")
 '''''
 x=-6/13
-print x
+print(x)
 
 
 n = 2
@@ -91,10 +91,11 @@ test_str = u"alert aaa12312.2。" \
            u"alert aaa12312"
 
 test_str = 'alert("-990297020[-990297020]'
-
+'''
 reg = re.compile(ur'.*alert.*\[-(\d{6,})\]')
 #reg = re.compile(u'alert.*?(\d+\.\d*)')
 match = reg.search(test_str)
 if match:
     #reg = re.compile(ur'\d{4,}')
-    print match.group(1)
+    print(match.group(1))
+'''
