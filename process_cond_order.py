@@ -4,8 +4,8 @@ import time
 from db_util import *
 from stock_util import *
 from trade_util import *
-import futuquant as ft
-from futuquant.open_context import *
+from  futuquant import *
+
 
 ####### init log ################
 logging.basicConfig(level=logging.DEBUG,
@@ -30,7 +30,7 @@ class process_cond_order():
         self.order_db = db_util()
         self.order_db.init_db()
         self.auto_trade = auto_trade("config.ini")
-        self.quote_context = ft.OpenQuoteContext(host='127.0.0.1', port=11111)
+        self.quote_context = OpenQuoteContext(host='127.0.0.1', port=11111)
 
 
     #检查是否是可以触发的时间
@@ -61,12 +61,15 @@ class process_cond_order():
                     or now_price <= row.compare_price and row.direction == order_direction_def["down"]) \
                     and self.check_fire_time(row.begin_in_day, row.end_in_day):
                 logging.info("submit order: row.order_id=%s, row.action =%s, row.deal_price=%f,  row.amount=%d" % (row.order_id, row.action, row.deal_price,  row.amount))
+
                 (ret, result) = self.auto_trade.buy_sell(row.action, row.stock_code[3:], row.deal_price, row.amount)
                 if ret != 0:
                     logging.warn("deal fail: ret=%d, action=%s, stock_code=%s, deal_price=%f, amount=%d" % (ret, row.action, row.stock_code, row.deal_price, row.amount))
                     continue
                 self.todo_orders.remove(row)
                 self.order_db.update_cond_order(row.order_id, order_state_def["done"])
+
+
 
     #从数据库load数据到本地进行访问
     def load_from_db(self):

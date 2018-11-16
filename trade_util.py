@@ -16,7 +16,6 @@ from crack_bmp import *
 import logging
 
 import futuquant as ft
-from futuquant.open_context import *
 
 class gw_ret_code:
     # 150906130资金不足
@@ -31,6 +30,7 @@ class gw_ret_code:
     PASSWORD_ERROR = 7 #980023096 账号或者密码不对
     SHENGOU_LIMIT = 8 #申购数量超过可申购额度
     REPEATED_SHENGOU = 9  #"-150906090新股配售同一只证券代码不允许重复委托!"
+    EXCEED_ZHANGTING = 10 #-990265050[-990265050]委托价格超过涨停价格
 
     LOGIN_FAIL = 100 #login fail
     OTHER_ERROR = 999
@@ -134,10 +134,10 @@ class auto_trade:
         print("Action of ", stock_code , ": Order_type=", order_type , ", price=" , price , ", amount=" , amount)
         ############ post buy order #######################
         stock_ut = stock_util()
-        market_id  = stock_ut.get_market(stock_code)
+        market_id = stock_ut.get_market(stock_code)
         up_limit = stock_ut.get_up_limit(price)
         down_limit = stock_ut.get_down_limit(price)
-        #print market_id
+        print(market_id)
         secuid = self.secuids[market_id]
         maxBuy = 0
         post_data = {
@@ -162,6 +162,7 @@ class auto_trade:
         #print(result.decode('gbk', "ignore"))
         #判断是否出错
         reg = re.compile('.*alert.*\[-(\d{6,})\]')
+        print(result.decode('gbk', "ignore"))
         match = reg.search(result.decode('gbk', "ignore"))
         if match: #正常的买卖
             if match.group(1) == "150906130":
@@ -174,18 +175,29 @@ class auto_trade:
                 return gw_ret_code.NOT_DEAL_TIME, "非交易时段"
             elif match.group(1) == "990265060":
                 return gw_ret_code.NOT_CORRECT_PRICE, "价位不对"
-            elif  match.group(1) == "150906090":
-                return gw_ret_code.REPEATED_SHENGOU, "新股配售同一只证券代码不允许重复委托"
+            elif match.group(1) == "990265050":
+                return gw_ret_code.EXCEED_ZHANGTING, "委托价格超过涨停价格"
             else:
                 print("not deal error: msg=%s" % (match.group(1)))
                 return gw_ret_code.OTHER_ERROR, "其他错误"
         else: #判断是否新股申购
+            #没有返回码，特殊处理
             reg1 = re.compile('.*alert.*新股申购数量超出.*\[(\d{3,})\]')
+            print(result.decode('gbk', "ignore"))
             match = reg1.search(result.decode('gbk', "ignore"))
             if match:
                 return gw_ret_code.SHENGOU_LIMIT, match.group(1)
-            else:
-                return gw_ret_code.OTHER_ERROR, "其他错误"
+
+            #有返回码
+            reg = re.compile('.*alert.*-(\d{6,}).*')
+            #print(result.decode('gbk', "ignore"))
+            match = reg.search(result.decode('gbk', "ignore"))
+            if match:
+                if match.group(1) == "150906090":
+                    return gw_ret_code.REPEATED_SHENGOU, "新股配售同一只证券代码不允许重复委托"
+                else:
+                    print("deal ipo  error: msg=%s" % (match.group(1)))
+                    return gw_ret_code.OTHER_ERROR, "其他错误"
 
         #解析出合同编号，如果出错，那么返回""
         print(result.decode("gbk", "ignore"))

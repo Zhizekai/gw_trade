@@ -59,9 +59,15 @@ elif (args.action_type == "P"):
 
 elif (args.action_type == "N"):
     cn_spider = CnIpoSpider()
-    cn_spider.crawl_list()
-    # cn_spider.crawl_detail()
-    today_ipos = cn_spider.get_today_ipo()
+    try:
+        cn_spider.crawl_list()
+        # cn_spider.crawl_detail()
+        today_ipos = cn_spider.get_today_ipo()
+    except Exception as e:
+        print("dfadfadfadsfd")
+        print("Exception: msg=", e)
+        exit()
+
     if len(today_ipos) == 0:
         logging.info("今天没有IPO")
     else:
@@ -69,6 +75,7 @@ elif (args.action_type == "N"):
         logging.info(today_ipos)
     logging.info("进行申购")
     for one_ipo in today_ipos:
+
         (ret, result) = auto_trade.buy_sell("B", one_ipo["apply_code"], one_ipo["ipo_price"], one_ipo["apply_limit"])
         if ret == 0:
             logging.info("Deal OK: order_id=%s" % result)

@@ -73,7 +73,7 @@ class CnIpoSpider:
                 ipo["code"] = tds[0].find("a").string   # 代码
                 ipo["name"] = tds[1].find("a").string   # 名称
                 #ipo["tc_name"] = Converter('zh-hant').convert(ipo["name"])#将简体转繁体  zh-hans繁体转简体
-                ipo["apply_code"] = tds[2].string     # 申购代码
+                ipo["apply_code"] = tds[2].string.strip()    # 申购代码
                 ipo["publish_shares"] = tds[3].string + u"万股" #发行总数
                 ipo["online_publish_shares"] = tds[4].string + u"万股" #网上发新数
 
@@ -87,15 +87,17 @@ class CnIpoSpider:
 
                 #需要多少钱
                 if tds[6].find("span", attrs={"class": "yugu"}):
+
                     ipo["apply_limit_mv"] = u"预估 " + tds[6].contents[1].string + u"万元"
                 else:
                     ipo["apply_limit_mv"] = tds[6].string + u"万元"
 
                 #发行价格
                 if tds[7].find("span", attrs={"class": "yugu"}):
+                    #ipo["ipo_price"] = u"预估 " + tds[7].contents[2].string.replace('\r', '').replace('\n', '').replace('\t', '')
                     ipo["ipo_price"] = u"预估 " + tds[7].contents[1].string
                 else:
-                    ipo["ipo_price"] = tds[7].string     
+                    ipo["ipo_price"] = tds[7].string.replace('\r', '').replace('\n', '').replace('\t', '')
                 
                 ipo["pe"] = tds[8].string
                 ipo["industry_pe"] = tds[9].string

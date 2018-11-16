@@ -27,10 +27,32 @@ REGION = "cn-hangzhou"
 PRODUCT_NAME = "Dysmsapi"
 DOMAIN = "dysmsapi.aliyuncs.com"
 
-acs_client = AcsClient(const.ACCESS_KEY_ID, const.ACCESS_KEY_SECRET, REGION)
-region_provider.add_endpoint(PRODUCT_NAME, REGION, DOMAIN)
 
-class sms_util
+    #print(__business_id)
+    params = "{\"err_code\":\"测试\",\"err_msg\":\"测试信息\"}"
+	#params = u'{"name":"wqb","code":"12345678","address":"bz","phone":"13000000000"}'
+    print(send_sms(__business_id, "13802258141", "高吸低抛", "SMS_151175932", params))
+class sms_util:
+    def __init__(self):
+        def __init__(self, config_file):
+            self.access_key_id = ""
+            self.access_key_secret = ""
+            self.phone_num = "13802258141"
+            self.app_name = "高吸低抛"
+            self.sms_tem_id = "SMS_151175932"
+            self.read_config(config_file)
+
+        def read_config(self, config_file):
+            # 读取配置文件
+            cf = configparser.ConfigParser()
+            try:
+                cf.read(config_file)
+                self.access_key_id = cf.get("aliyun", "AccessKeyId")
+                self.access_key_secret = cf.get("aliyun", "AccessKeySecret")
+
+            except Exception as e:
+                
+                return
     
 
 def send_sms(business_id, phone_numbers, sign_name, template_code, template_param=None):
