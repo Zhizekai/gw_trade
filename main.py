@@ -5,7 +5,8 @@ import argparse
 from trade_util import *
 import logging
 from ipo_spider import *
-
+import comm_util
+from sms_util import *
 ####### init log ################
 logging.basicConfig(level=logging.DEBUG,
                 format='[%(asctime)s][%(filename)s][line:%(lineno)d][%(levelname)s] %(message)s',
@@ -38,6 +39,8 @@ args = parser.parse_args()
 #print(args.action_type, args.cmd_args)
 
 auto_trade = auto_trade("config.ini")
+sms_util_ins = sms_util()
+sms_util_ins.init()
 
 if (args.action_type == "B" or args.action_type == "S"):
     (ret, result) = auto_trade.buy_sell(args.action_type, args.cmd_args[0], args.cmd_args[1],args.cmd_args[2])
@@ -59,14 +62,12 @@ elif (args.action_type == "P"):
 
 elif (args.action_type == "N"):
     cn_spider = CnIpoSpider()
-    try:
-        cn_spider.crawl_list()
-        # cn_spider.crawl_detail()
-        today_ipos = cn_spider.get_today_ipo()
-    except Exception as e:
-        print("dfadfadfadsfd")
-        print("Exception: msg=", e)
+    ret = cn_spider.crawl_list()
+    if ret != 0:
+        sms_util_ins.send_sms(ret, "get ipo list fail")
         exit()
+    # cn_spider.crawl_detail()
+    today_ipos = cn_spider.get_today_ipo()
 
     if len(today_ipos) == 0:
         logging.info("今天没有IPO")

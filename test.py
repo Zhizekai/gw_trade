@@ -6,7 +6,7 @@ import re
 import pandas as pd
 import numpy as np
 from datetime import *
-
+'''''
 for i in range(5):
     print("i=", i)
 exit()
@@ -65,13 +65,13 @@ def get_vcode(vcode_file, decode_file):
     f = open(decode_file+".txt", 'r')
     tmp_line = f.readline().strip()
     return tmp_line
-'''''
+
 if len(sys.argv) < 2:
     print 'Usage: ./test.py file_name'
     sys.exit()
 file_name=sys.argv[1]
 print get_vcode(r"d:\1.jpg", r"d:\vcode")
-'''''
+
 x=-6/13
 print(x)
 
@@ -89,13 +89,14 @@ matrix = [None]*2
 #exit()
 test_str = u"alert aaa12312.2。" \
            u"alert aaa12312"
+'''''
 
-test_str = 'alert("-990297020[-990297020]'
-'''
-reg = re.compile(ur'.*alert.*\[-(\d{6,})\]')
+test_str = 'alert("-990297020[-990297020] '
+#
+reg = re.compile('.*alert.*\[-(\d{6,})\].*')
 #reg = re.compile(u'alert.*?(\d+\.\d*)')
 match = reg.search(test_str)
 if match:
     #reg = re.compile(ur'\d{4,}')
     print(match.group(1))
-'''
+

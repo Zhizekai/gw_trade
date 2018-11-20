@@ -1,5 +1,5 @@
 set global transaction isolation level READ UNCOMMITTED;
-create databases orderdb;
+create database orderdb;
 use orderdb;
 CREATE TABLE `cond_order` (
 	`order_id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
