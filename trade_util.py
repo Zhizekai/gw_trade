@@ -31,6 +31,7 @@ class gw_ret_code:
     SHENGOU_LIMIT = 8 #申购数量超过可申购额度
     REPEATED_SHENGOU = 9  #"-150906090新股配售同一只证券代码不允许重复委托!"
     EXCEED_ZHANGTING = 10 #-990265050[-990265050]委托价格超过涨停价格
+    NOT_CORRECT_TIME = 11 #160002006 当前时间不允许操作
 
     LOGIN_FAIL = 100 #login fail
     OTHER_ERROR = 999
@@ -109,16 +110,18 @@ class auto_trade:
         #print(result.decode("gbk", "ignore"))
         reg = re.compile('.*PublicKey.*')
         match = reg.search(result.decode("gbk", "ignore"))
+
         if match:
             return -20
-        '''
+            '''
+            print(match)
             if match.group(1) == "980023096":
                 print("login  error: msg=%s" % (match.group(1)))
                 return gw_ret_code.PASSWORD_ERROR
             else:
                 print("login error: msg=%s" % (match.group(1)))
                 return gw_ret_code.OTHER_ERROR
-        '''
+            '''
         #保存cookie
 
         return 0
@@ -162,7 +165,7 @@ class auto_trade:
         #print(result.decode('gbk', "ignore"))
         #判断是否出错
         reg = re.compile('.*alert.*\[-(\d{6,})\]')
-        print(result.decode('gbk', "ignore"))
+        #print(result.decode('gbk', "ignore"))
         match = reg.search(result.decode('gbk', "ignore"))
         if match: #正常的买卖
             if match.group(1) == "150906130":
@@ -183,24 +186,26 @@ class auto_trade:
         else: #判断是否新股申购
             #没有返回码，特殊处理
             reg1 = re.compile('.*alert.*新股申购数量超出.*\[(\d{3,})\]')
-            print(result.decode('gbk', "ignore"))
+            #print(result.decode('gbk', "ignore"))
             match = reg1.search(result.decode('gbk', "ignore"))
             if match:
                 return gw_ret_code.SHENGOU_LIMIT, match.group(1)
 
             #有返回码
-            reg = re.compile('.*alert.*-(\d{6,}).*')
+            reg = re.compile('.*alert.*\[-(\d{6,})\].*')
             #print(result.decode('gbk', "ignore"))
             match = reg.search(result.decode('gbk', "ignore"))
             if match:
+                print("match=" + match.group(1))
                 if match.group(1) == "150906090":
                     return gw_ret_code.REPEATED_SHENGOU, "新股配售同一只证券代码不允许重复委托"
+                if match.group(1) == "160002006":
+                    return gw_ret_code.NOT_CORRECT_TIME, "当前时间不允许操作"
                 else:
-                    print("deal ipo  error: msg=%s" % (match.group(1)))
                     return gw_ret_code.OTHER_ERROR, "其他错误"
 
         #解析出合同编号，如果出错，那么返回""
-        print(result.decode("gbk", "ignore"))
+        #print(result.decode("gbk", "ignore"))
         reg = re.compile('alert.*(\d{4})')
         match = reg.search(result.decode("gbk", "ignore"))
         if match:

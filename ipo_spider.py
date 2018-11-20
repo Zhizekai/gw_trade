@@ -74,6 +74,7 @@ class CnIpoSpider:
                 ipo["name"] = tds[1].find("a").string   # 名称
                 #ipo["tc_name"] = Converter('zh-hant').convert(ipo["name"])#将简体转繁体  zh-hans繁体转简体
                 ipo["apply_code"] = tds[2].string.strip()    # 申购代码
+
                 ipo["publish_shares"] = tds[3].string + u"万股" #发行总数
                 ipo["online_publish_shares"] = tds[4].string + u"万股" #网上发新数
 
@@ -94,10 +95,10 @@ class CnIpoSpider:
 
                 #发行价格
                 if tds[7].find("span", attrs={"class": "yugu"}):
-                    #ipo["ipo_price"] = u"预估 " + tds[7].contents[2].string.replace('\r', '').replace('\n', '').replace('\t', '')
-                    ipo["ipo_price"] = u"预估 " + tds[7].contents[1].string
+                    # ipo["ipo_price"] = u"预估 " + tds[7].contents[2].string.replace('\r', '').replace('\n', '').replace('\t', '')
+                    ipo["ipo_price"] = u"预估 " + tds[7].contents[0].string.strip()
                 else:
-                    ipo["ipo_price"] = tds[7].string.replace('\r', '').replace('\n', '').replace('\t', '')
+                    ipo["ipo_price"] = tds[7].string.strip()
                 
                 ipo["pe"] = tds[8].string
                 ipo["industry_pe"] = tds[9].string
@@ -122,8 +123,10 @@ class CnIpoSpider:
                 logging.info("code:{0}, name:{1}, ipo_date:{2}".format(ipo["code"], ipo["name"], ipo["ipo_date"]))
                 attr_report(441842)
         except Exception as e:
-            attr_report(441843)
             logging.warning('cn crawl list ex: {0}, {1}'.format(e, traceback.format_exc()))
+            return -20
+
+        return 0
 
     @staticmethod
     def _parse_lucky_date(tag):
