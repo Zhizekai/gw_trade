@@ -140,7 +140,7 @@ class auto_trade:
         market_id = stock_ut.get_market(stock_code)
         up_limit = stock_ut.get_up_limit(price)
         down_limit = stock_ut.get_down_limit(price)
-        print(market_id)
+        #print(market_id)
         secuid = self.secuids[market_id]
         maxBuy = 0
         post_data = {
@@ -192,11 +192,11 @@ class auto_trade:
                 return gw_ret_code.SHENGOU_LIMIT, match.group(1)
 
             #有返回码
-            reg = re.compile('.*alert.*\[-(\d{6,})\].*')
+            reg = re.compile('.*alert\("-(\d{6,}).*')
             #print(result.decode('gbk', "ignore"))
             match = reg.search(result.decode('gbk', "ignore"))
             if match:
-                print("match=" + match.group(1))
+                #print("match=" + match.group(1))
                 if match.group(1) == "150906090":
                     return gw_ret_code.REPEATED_SHENGOU, "新股配售同一只证券代码不允许重复委托"
                 if match.group(1) == "160002006":

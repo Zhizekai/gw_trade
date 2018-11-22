@@ -76,7 +76,6 @@ elif (args.action_type == "N"):
         logging.info(today_ipos)
     logging.info("进行申购")
     for one_ipo in today_ipos:
-
         (ret, result) = auto_trade.buy_sell("B", one_ipo["apply_code"], one_ipo["ipo_price"], one_ipo["apply_limit"])
         if ret == 0:
             logging.info("Deal OK: order_id=%s" % result)
