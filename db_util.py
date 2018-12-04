@@ -91,6 +91,7 @@ class db_util:
         return ret_order_list
 
     def get_all_orders(self, stock_code=None):
+        #查找普通止损单
         if stock_code != None:
             order_list = self.session.query(cond_order).filter(cond_order.stock_code == stock_code).all()
         else:

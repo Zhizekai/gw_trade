@@ -20,3 +20,24 @@ COLLATE='utf8_general_ci'
 ENGINE=InnoDB
 AUTO_INCREMENT=16
 ;
+
+CREATE TABLE `move_cond_order` (
+	`order_id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`stock_code` VARCHAR(30) NOT NULL DEFAULT '',
+	`amount` INT(10) NOT NULL DEFAULT '100',
+	`type` FLOAT NOT NULL DEFAULT '0', 
+	`delta_price` FLOAT NOT NULL DEFAULT '0',
+	`delta_percent` FLOAT NOT NULL DEFAULT '0',
+	`deal_price_delta` FLOAT NOT NULL DEFAULT '0', 
+	`begin_in_day` INT(10) NOT NULL DEFAULT '0',
+	`end_in_day` INT(10) NOT NULL DEFAULT '0',
+	`state` INT(10) NOT NULL DEFAULT '0',
+	`update_time` TIMESTAMP NOT NULL DEFAULT '0000-00-00 00:00:00',
+	`insert_time` TIMESTAMP NOT NULL DEFAULT '0000-00-00 00:00:00',
+	PRIMARY KEY (`order_id`)
+)
+COLLATE='utf8_general_ci'
+ENGINE=InnoDB
+AUTO_INCREMENT=16
+;
+

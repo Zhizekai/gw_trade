@@ -17,11 +17,11 @@ class trade_url:
         tmp_cookie = http.cookiejar.CookieJar()
         opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(tmp_cookie))
         try:
-            response = opener.open(self.logout_url, timeout=3)
-        except urllib.HTTPError as e:
+            response = opener.open(self.logout_url, timeout=10)
+        except urllib.error.HTTPError as e:
             logging.warn("server process request error: err_code=%s", e.code)
             return -5, None
-        except urllib.URLError as e:
+        except urllib.error.URLError as e:
             logging.warn("reach server error: reason=%s", e.reason)
             return -10, None
         except Exception as e:
@@ -50,7 +50,7 @@ class trade_url:
 
         try:
             #resp = urllib.request.urlopen(req, timeout=3)
-            resp = opener.open(req, timeout=3)
+            resp = opener.open(req, timeout=10)
         except urllib.error.HTTPError as e:
             logging.warn("server process request error: err_code=%s", e.code)
             return -5, None
@@ -85,7 +85,7 @@ class trade_url:
         #print(req.headers)
         #print(req.data)
         try:
-            resp = urllib.request.urlopen(req, timeout=3)
+            resp = urllib.request.urlopen(req, timeout=10)
         except urllib.HTTPError as e:
             logging.warn("server process request error: err_code=%s", e.code)
             return -5, None
