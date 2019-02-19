@@ -4,7 +4,7 @@ import time
 from db_util import *
 from stock_util import *
 from trade_util import *
-from  futuquant import *
+from futu import *
 
 
 ####### init log ################

@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 import sys
-from aliyunsdkdysmsapi.request.v20170525 import SendSmsRequest
-from aliyunsdkdysmsapi.request.v20170525 import QuerySendDetailsRequest
-from aliyunsdkcore.client import AcsClient
 import uuid
-from aliyunsdkcore.profile import region_provider
-from aliyunsdkcore.http import method_type as MT
-from aliyunsdkcore.http import format_type as FT
+
+from aliyunsdkcore.client import AcsClient
+from aliyunsdkcore.acs_exception.exceptions import ClientException
+from aliyunsdkcore.acs_exception.exceptions import ServerException
+from aliyunsdkecs.request.v20140526 import DescribeInstancesRequest
+from aliyunsdkecs.request.v20140526 import StopInstanceRequest
+from aliyunsdkcore.request import CommonRequest
 
 from comm_util import *
 """
@@ -52,53 +53,44 @@ class sms_util:
             logging.warning("read config fail: ret=%d", ret)
             return -20
         self.acs_client = AcsClient(self.access_key_id, self.access_key_secret, REGION)
-        region_provider.add_endpoint(PRODUCT_NAME, REGION, DOMAIN)
 
     def send_sms_err_msg(self, ret_code, ret_msg):
-        __business_id = uuid.uuid1()
         params = "{\"err_code\":\"" + ret_code + "\",\"err_msg\":\"" + ret_msg + "\"}"
-        #print(self.phone_num)
+        ret = self.send_sms(self.phone_num, self.app_name, self.sms_tem_id, params)
+        return ret
+
+    def send_sms(self, phone_numbers, sign_name, template_code, template_param=None):
+        request = CommonRequest()
+        request.set_accept_format('json')
+        request.set_domain('dysmsapi.aliyuncs.com')
+        request.set_method('POST')
+        request.set_protocol_type('https')  # https | http
+        request.set_version('2017-05-25')
+        request.set_action_name('SendSms')
+
+        request.add_query_param('PhoneNumbers', phone_numbers)
+        request.add_query_param('SignName', sign_name)
+        request.add_query_param('TemplateCode', template_code)
+        request.add_query_param('TemplateParam', template_param)
+
         try:
-            self.send_sms(__business_id, self.phone_num, self.app_name, self.sms_tem_id, params)
-        except Exception as e:
-            logging.warning("send msg fail: %s", str(e))
+            response = self.acs_client.do_action_with_exception(request)
+            logging.info("send sms result: response = %s", response)
+        except ServerException as e:
+            logging.warning("send sms fail: response = %s", str(e))
+            return -5
+        except ClientException as e:
+            logging.warning("send sms fail: response = %s", str(e))
             return -10
 
-    def send_sms(self, business_id, phone_numbers, sign_name, template_code, template_param=None):
-        smsRequest = SendSmsRequest.SendSmsRequest()
-        # 申请的短信模板编码,必填
-        smsRequest.set_TemplateCode(template_code)
-
-        # 短信模板变量参数
-        if template_param is not None:
-            smsRequest.set_TemplateParam(template_param)
-
-        # 设置业务请求流水号，必填。
-        smsRequest.set_OutId(business_id)
-
-        # 短信签名
-        smsRequest.set_SignName(sign_name)
-
-        # 数据提交方式
-        # smsRequest.set_method(MT.POST)
-
-        # 数据提交格式
-        # smsRequest.set_accept_format(FT.JSON)
-
-        # 短信发送的号码列表，必填。
-        smsRequest.set_PhoneNumbers(phone_numbers)
-
-        # 调用短信发送接口，返回json
-        smsResponse = self.acs_client.do_action_with_exception(smsRequest)
-
-        # TODO 业务处理
-
-        return smsResponse
+        return 0
 
 if __name__ == '__main__':
     sms_util_ins = sms_util()
     sms_util_ins.init()
-    sms_util_ins.send_sms_err_msg("test", "test msg")
+    ret = sms_util_ins.send_sms_err_msg("test", "test msg")
+    if ret != 0:
+        print("sms send msg fail: iret=", ret)
    
     
     

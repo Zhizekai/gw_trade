@@ -12,10 +12,11 @@ import configparser
 # from crack_vc import crack_vc
 from stock_util import *
 from html_parser import *
-from crack_bmp import *
+#from crack_bmp import *
+from fateadm_api import *
 import logging
 
-import futuquant as ft
+import futu as ft
 
 class gw_ret_code:
     # 150906130资金不足
@@ -32,6 +33,7 @@ class gw_ret_code:
     REPEATED_SHENGOU = 9  #"-150906090新股配售同一只证券代码不允许重复委托!"
     EXCEED_ZHANGTING = 10 #-990265050[-990265050]委托价格超过涨停价格
     NOT_CORRECT_TIME = 11 #160002006 当前时间不允许操作
+    ALREADY_CANCELED = 12 #-410413020[-990268050]该笔委托已经全部成交或全部撤单
 
     LOGIN_FAIL = 100 #login fail
     OTHER_ERROR = 999
@@ -41,6 +43,12 @@ class auto_trade:
         self.account = ""
         self.passwd_encrypted = ""
         self.secuids = None
+        self.pd_id = ""
+        self.pd_key = ""
+        self.app_id = ""
+        self.app_key = ""
+        self.pred_type = ""
+
         self.stock_code = ""
         self.order_type = ""
         self.price = ""
@@ -62,6 +70,14 @@ class auto_trade:
                         1: secuids_sh,
                         0: secuids_sz
                     }
+
+            #斐斐打码的相关参数
+            self.pd_id  = cf.get("feifeidama", "pd_id")
+            self.pd_key = cf.get("feifeidama", "pd_key")
+            self.app_id = cf.get("feifeidama", "app_id")
+            self.app_key = cf.get("feifeidama", "app_key")
+            self.pred_type = cf.get("feifeidama", "pred_type")
+
         except Exception as e:
             #logging.warning()
             return
@@ -69,23 +85,40 @@ class auto_trade:
     # 登录后获得cookie
     def prepare(self):
         ###preprea for login
+        logging.debug("before get index page , time=%d", int(time.time()))
         (ret, result) = self.gw_trade.prepare("https://trade.cgws.com/cgi-bin/user/Login?function=tradeLogout")
         if ret != 0:
             logging.warn("get verified code fail: ret=%d" % ret)
             return -5
+        logging.debug("after get index page , time=%d", int(time.time()))
+
         #get verify code
+        logging.debug("before get verify code, time=%d", int(time.time()))
+
         #urllib.urlretrieve("https://trade.cgws.com/cgi-bin/img/validateimg", "d://1.jpg", None)
         (ret, tmp_buff) = self.gw_trade.get_to_url("https://trade.cgws.com/cgi-bin/img/validateimg", "rand=" + str(random.random()))
         if ret != 0:
-            logging.warn("get verified code fail: ret=%d" % ret)
+            logging.warning("get verified code fail: ret=%d" % ret)
             return -10
+        logging.debug("after get verify code, time=%d", int(time.time()))
+
         #tmp_buff = gw_trade.get_to_url("https://trade.cgws.com/cgi-bin/img/validateimg", "")0
         verify_pic = open('d://1.jpg', 'wb')
         verify_pic.write(tmp_buff)
         verify_pic.close()
         #verify_code = crack_vc().get_vcode(r"d:\1.jpg", r"d:\vcode")
-        crack_bmp1 = crack_bmp()
-        verify_code = crack_bmp1.decode_from_file("d://1.jpg")
+        #crack_bmp1 = crack_bmp()
+        #verify_code = crack_bmp1.decode_from_file("d://1.jpg")
+
+        api = FateadmApi(self.app_id, self.app_key, self.pd_id, self.pd_key)
+        file_name = "d://1.jpg"
+        rsp = api.PredictFromFile(self.pred_type, file_name)  # 返回详细识别结果
+        if rsp.ret_code == 0:
+            verify_code = rsp.pred_rsp.value
+            logging.debug("crack verify code: answer=%s", verify_code)
+        else:
+            return -13
+
         #pasre verify code,just input by you
         #verify_code = raw_input('Enter verify code : ')
         #print verify_code
@@ -102,11 +135,13 @@ class auto_trade:
         'isSaveAccount':'1',
         'normalpassword':'',
         }
+        logging.debug("before login, time=%d", int(time.time()))
+
         (ret, result) = self.gw_trade.post_to_url("https://trade.cgws.com/cgi-bin/user/Login", post_data)
         if ret != 0:
             return -15
+        logging.debug("after login=, time=%d", int(time.time()))
 
-        # 判断是否出错
         #print(result.decode("gbk", "ignore"))
         reg = re.compile('.*PublicKey.*')
         match = reg.search(result.decode("gbk", "ignore"))
@@ -134,7 +169,7 @@ class auto_trade:
         if ret != 0:
             return  gw_ret_code.LOGIN_FAIL, "登录失败"
 
-        print("Action of ", stock_code , ": Order_type=", order_type , ", price=" , price , ", amount=" , amount)
+        logging.info("Action of=%s, Order_type=%s, price=%s,, amount=%s  ", stock_code, order_type, price, amount)
         ############ post buy order #######################
         stock_ut = stock_util()
         market_id = stock_ut.get_market(stock_code)
@@ -228,11 +263,14 @@ class auto_trade:
             return -5, None
         #print result
         # 判断是否出错
+        #print(result.decode("gbk", "ignore"))
         reg = re.compile('.*alert.*\[-(\d{6,})\]')
         match = reg.search(result.decode("gbk", "ignore"))
         if match:
             if match.group(1) == "990268040":
                 return gw_ret_code.NOT_RIGHT_ORDER_ID, "订单号不正确"
+            elif match.group(1) == "990268050":
+                return gw_ret_code.ALREADY_CANCELED, "该笔委托已经全部成交或全部撤单"
             else:
                 return gw_ret_code.OTHER_ERROR, "其他错误"
 
@@ -241,7 +279,7 @@ class auto_trade:
     def query_account(self):
         ret = self.prepare()
         if ret != 0:
-            return  gw_ret_code.LOGIN_FAIL, "登录失败"
+            return gw_ret_code.LOGIN_FAIL, "登录失败"
 
         (ret, result) = self.gw_trade.get_to_url("https://trade.cgws.com/cgi-bin/stock/EntrustQuery?function=MyAccount", "")
         if ret != 0:

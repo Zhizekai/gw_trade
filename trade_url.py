@@ -47,7 +47,6 @@ class trade_url:
         #print req.data
         tmp_cookie = http.cookiejar.CookieJar()
         opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(tmp_cookie))
-
         try:
             #resp = urllib.request.urlopen(req, timeout=3)
             resp = opener.open(req, timeout=10)

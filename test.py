@@ -3,10 +3,33 @@
 import os, sys
 import re
 #import Image
-import pandas as pd
 import numpy as np
+import pandas as pd
+
 from datetime import *
+
+t1 = date(2016, 8, 3)
+t2 = datetime(2016, 8, 3)
+
+if t1 == t2:
+    print("time equal")
+
+print(t2-t1)
+pd_id = "109554";
+pd_key = "1Yd5+vpvVROCSLickrtTx3CdKkqsi1GN";
+app_id = "309554";
+app_key = "aTyjQwZwQ0PFhBcgPuebJeEFP9KCHi/0";
+# 具体类型可以查看官方网站的价格页选择具体的类型，不清楚类型的，可以咨询客服
+pred_type = "50100";
+# 初始化api接口
+
 '''''
+
+dict_ins = {"a":"1111", "b":"2222"}
+str='     '.join('{}:{}'.format(k, v) for k, v in dict_ins.items())
+print(str)
+
+
 for i in range(5):
     print("i=", i)
 exit()
@@ -99,4 +122,42 @@ match = reg.search(test_str)
 if match:
     #reg = re.compile(ur'\d{4,}')
     print(match.group(1))
+
+def sample():
+    (ret, data) = getSomething()
+    if ret == 1 or ret == 2:
+        print("getSomething error: ret=%d", ret)
+        return
+
+    #ret ok, # process data
+    processData(data)
+
+def sample():
+    (ret, data) = getSomething()
+    if ret == 1 or ret == 2:
+        print("getSomething error: ret=%d", ret)
+        return -10
+    if ret == 3:
+        #do something
+        doSomething()
+        return -20
+
+    #ret ok, # process data
+    processData(data)
+
+    return 0
+
+
+def sample():
+    (ret, data) = getSomething()
+    if ret == 0:
+        # ret ok, # process data
+        processData(data)
+        return 0
+    elif ret == 3:
+        doSomething()
+        return -10
+    else:
+        print("getSomething error: ret=%d", ret)
+        return -20
 
